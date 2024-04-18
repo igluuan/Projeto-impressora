@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import messagebox
 from openpyxl import Workbook, load_workbook
 from datetime import datetime
+from tkinter import ttk
 
 ctk.set_appearance_mode("System") 
 appWidth, appHeight = 350, 210
@@ -25,12 +26,18 @@ class PrinterManager(ctk.CTk):
         self.entry_patrimonio = ctk.CTkEntry(self, width=170, height=35, placeholder_text='Ex: 12234')
         self.entry_patrimonio.grid(row=1, column=1,sticky='ew')
 
-        self.label_data = ctk.CTkLabel(self, text="Data de entrada (dd/mm/yyyy):")
-        self.label_data.grid(row=2, column=0,sticky='ew')
+        self.label_marca = ctk.CTkLabel(self, text="Marca:")
+        self.label_marca.grid(row=2, column=0,sticky='ew')
 
-        self.entry_data = ctk.CTkEntry(self, width=170, height=35, placeholder_text='01/01/2024')
-        self.entry_data.grid(row=2, column=1, sticky='ew')
+        # Alteração da entrada de marca para uma lista de seleção
+        self.label_marca = tk.Label(self, text="Marca:")  # Use Label from tkinter
+        self.label_marca.grid(row=2, column=0, sticky='ew')
 
+        # Using tkinter's Combobox instead
+        self.marca_options = ["SAMSUNG", "OKIDATA", "HP"]
+        self.entry_marca = ttk.Combobox(self, values=self.marca_options, height=35)
+        self.entry_marca.grid(row=2, column=1, sticky='ew')
+        
         self.button_adicionar = ctk.CTkButton(self, text="Adicionar Impressora", command=self.adicionar_impressora, width=200, height=35)
         self.button_adicionar.grid(row=3, column=0, columnspan=2,pady=10,padx=20,sticky='ew')
 
@@ -40,18 +47,10 @@ class PrinterManager(ctk.CTk):
     def adicionar_impressora(self):
         modelo = self.entry_modelo.get()
         patrimonio = self.entry_patrimonio.get()
-        data_entrada_str = self.entry_data.get()
+        marca = self.entry_marca.get()
 
-        if not modelo or not patrimonio or not data_entrada_str:
+        if not modelo or not patrimonio or not marca:
             messagebox.showerror("Erro", "Preencha todos os campos!")
-            return
-
-        try:
-            fmt = '%d/%m/%Y'
-            data = datetime.strptime(data_entrada_str, "%d/%m/%Y").date()
-            data_entrada = data.strftime(fmt)
-        except ValueError:
-            messagebox.showerror("Erro", "Formato de data inválido! Use dd/mm/yyyy")
             return
 
         try:
@@ -60,18 +59,16 @@ class PrinterManager(ctk.CTk):
             workbook = Workbook()
             workbook.remove(workbook.active) # type: ignore
 
-        if modelo not in workbook.sheetnames:
-            workbook.create_sheet(modelo)
-
-        worksheet = workbook[modelo]
-        worksheet.append([modelo, patrimonio, data_entrada])
+    
+        worksheet = workbook['QUINTO_SETOR']
+        worksheet.append([marca, modelo, patrimonio])
         workbook.save("impressoras.xlsx")
-        messagebox.showinfo("Sucesso", "Impressora adicionada com sucesso!")
+        print('ok')
 
         # Limpar campos após adicionar
         self.entry_modelo.delete(0, ctk.END)
         self.entry_patrimonio.delete(0, ctk.END)
-        self.entry_data.delete(0, ctk.END)
+        self.entry_marca.set("")  # Limpar a seleção da marca após adicionar
 
     def remover_impressora(self):
         modelo = self.entry_modelo.get()
